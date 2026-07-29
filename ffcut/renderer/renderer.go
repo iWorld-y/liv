@@ -19,6 +19,10 @@ const (
 	pixelFormat = "yuv420p"
 	voiceGain   = 1.0
 	maxBGMGain  = 1.0
+
+	drawtextAlignMiddleLeft   = "M+L"
+	drawtextAlignMiddleCenter = "M+C"
+	drawtextAlignMiddleRight  = "M+R"
 )
 
 // Render validates project, builds the supported FFmpeg graph, and writes an MP4 file.
@@ -344,18 +348,21 @@ func subtitleLayerFilters(currentLabel, outputLabel string, canvas ffcut.Canvas,
 		"setpts=PTS-STARTPTS+" + seconds(layer.Range.Start) + "/TB",
 	}
 	for cueIndex, cue := range subtitle.Cues {
-		xExpression := "0"
+		textAlign := drawtextAlignMiddleLeft
 		switch subtitle.Style.Align {
 		case ffcut.TextAlignCenter:
-			xExpression = fmt.Sprintf("(%d-text_w)/2", width)
+			textAlign = drawtextAlignMiddleCenter
 		case ffcut.TextAlignRight:
-			xExpression = fmt.Sprintf("%d-text_w", width)
+			textAlign = drawtextAlignMiddleRight
 		}
 		options := []string{
 			"textfile='" + escapeDrawtextValue(textFiles[subtitleCueKey{layer: layerIndex, cue: cueIndex}]) + "'",
 			"expansion=none",
-			"x=" + xExpression,
-			fmt.Sprintf("y=(%d-text_h)/2", height),
+			"x=0",
+			"y=0",
+			"boxw=" + strconv.Itoa(width),
+			"boxh=" + strconv.Itoa(height),
+			"text_align=" + textAlign,
 			"fontsize=" + formatFloat(fontSize),
 			"fontcolor=" + subtitle.Style.Color,
 			"enable='" + timelineEnable(cue.Range) + "'",

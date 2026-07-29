@@ -157,6 +157,60 @@ func TestRenderBuildsOrderedLayerGraph(t *testing.T) {
 	}
 }
 
+func TestRenderAlignsSubtitleTextWithinRegion(t *testing.T) {
+	tests := []struct {
+		name      string
+		align     ffcut.TextAlign
+		textAlign string
+	}{
+		{name: "left", align: ffcut.TextAlignLeft, textAlign: "M+L"},
+		{name: "center", align: ffcut.TextAlignCenter, textAlign: "M+C"},
+		{name: "right", align: ffcut.TextAlignRight, textAlign: "M+R"},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			project := vmixProject(t)
+			project.Layers = []ffcut.Layer{
+				{
+					ID: "text-layer", Kind: ffcut.LayerKindSubtitle, Range: rendererRange(0, 2*time.Second),
+					Subtitle: &ffcut.SubtitleLayer{
+						Region: rendererGeometry(40, 100, 300, 120),
+						Style: ffcut.SubtitleStyle{
+							FontFamily: "sans-serif",
+							FontSize:   ffcut.Length{Value: 42, Unit: ffcut.LengthUnitPixel},
+							Color:      "#FFFFFF",
+							Align:      test.align,
+						},
+						Cues: []ffcut.SubtitleCue{{
+							ID: "title", Range: rendererRange(0, 2*time.Second), Text: "longer first line\nshort",
+						}},
+					},
+				},
+			}
+			runner := &recordingRunner{}
+
+			if err := Render(
+				context.Background(),
+				project,
+				filepath.Join(t.TempDir(), "final.mp4"),
+				withRunner(runner),
+			); err != nil {
+				t.Fatalf("Render() error = %v", err)
+			}
+
+			command := strings.Join(runner.args, " ")
+			want := "x=0:y=0:boxw=300:boxh=120:text_align=" + test.textAlign
+			if !strings.Contains(command, want) {
+				t.Errorf("command = %q, want fragment %q", command, want)
+			}
+			if strings.Contains(command, "text_w") || strings.Contains(command, "text_h") {
+				t.Errorf("command = %q, must align text within the fixed region box", command)
+			}
+		})
+	}
+}
+
 func TestRotatedOverlayPositionKeepsOriginalCenter(t *testing.T) {
 	canvas := ffcut.Canvas{Width: 720, Height: 1280}
 	x, y := rotatedOverlayPosition(rendererGeometry(10, 20, 100, 80), 90, canvas)

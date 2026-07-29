@@ -39,7 +39,7 @@ var renderer.ErrRenderFailed error
 - Supported audio: exactly one `AudioTrackKindVoice` and at most one `AudioTrackKindBGM`. Both span the complete timeline from zero without loop or fades. Track slice order has no semantic meaning; the renderer resolves each input by `kind`.
 - With BGM, the renderer applies each track's gain and mixes with `amix=inputs=2:duration=first:dropout_transition=0:normalize=0`. Voice remains the duration owner and is not implicitly normalized down. Without BGM, the historical single-voice graph is unchanged.
 - Supported foreground media: static image, looping animation, and looping video. Every source starts at frame zero when its absolute layer range begins; media source audio is ignored.
-- Supported foreground text: subtitle cues rendered in layer order with pixel/percent geometry, fill/background, alignment, and optional stroke. Cue text must be passed through temporary text files, never interpolated directly into an FFmpeg filter graph.
+- Supported foreground text: subtitle cues rendered in layer order with pixel/percent geometry, fill/background, alignment, and optional stroke. The resolved subtitle region is the fixed text box: each explicit line follows the style's left/center/right alignment within that box, while the complete text block is vertically centered. Cue text must be passed through temporary text files, never interpolated directly into an FFmpeg filter graph.
 - Layer geometry uses the Project canvas coordinate system. Opacity and rotation are applied before overlay, and the layer is enabled only inside its absolute range.
 - Output: H.264 High Profile, `yuv420p`, AAC 48 kHz, MP4 fast-start; CRF defaults to 20 and audio bitrate to 192k.
 - Rendering is silent by default. `WithDebug` writes the quoted command to the supplied writer; it must not enable implicit stdout/stderr logging.
@@ -72,6 +72,7 @@ var renderer.ErrRenderFailed error
 ## 6. Tests Required
 
 - Unit-test command construction for one and multiple clips, voice-only and voice-plus-BGM in either slice order, every supported fit, custom CRF, command failure, invalid output, cancellation, and every unsupported feature.
+- Unit-test subtitle command construction for left, center, and right alignment inside a fixed region. Assert the graph uses region-sized `boxw`/`boxh` and native `text_align`, rather than `text_w`/`text_h` positioning expressions.
 - Integration-test with generated MP3/WAV narration and M4A BGM sources. Assert output dimensions, approximate duration, exactly one video and one mixed audio stream, and frame colors on both sides of the cut.
 - Integration-test generated static image, multi-frame GIF, and video layers. Assert layer order, animation looping, video looping, and safe punctuation in text.
 - Assert original clip audio is absent from the rendered output contract.
