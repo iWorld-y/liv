@@ -7,12 +7,12 @@ type Probe struct {
 
 type ProbeStream struct {
 	// common
-	Index     int32   `json:"index,omitempty"`
-	CodecType string  `json:"codec_type,omitempty"`
-	CodecName string  `json:"codec_name,omitempty"`
-	Profile   string  `json:"profile,omitempty"`
-	BitRate   int32   `json:"bit_rate,omitempty,string"`
-	Duration  float32 `json:"duration,omitempty,string"`
+	Index     int32    `json:"index,omitempty"`
+	CodecType string   `json:"codec_type,omitempty"`
+	CodecName string   `json:"codec_name,omitempty"`
+	Profile   string   `json:"profile,omitempty"`
+	BitRate   int32    `json:"bit_rate,omitempty,string"`
+	Duration  Duration `json:"duration,omitempty"`
 
 	// video
 	Width      int32  `json:"width,omitempty"`
@@ -25,6 +25,10 @@ type ProbeStream struct {
 	DAR        string `json:"display_aspect_radio,omitempty"`
 	NBFrames   int32  `json:"nb_frames,omitempty,string"`
 
+	ColorSpace     string `json:"color_space,omitempty"`
+	ColorTransfer  string `json:"color_transfer,omitempty"`
+	ColorPrimaries string `json:"color_primaries,omitempty"`
+
 	// audio
 	SampleFmt     string `json:"sample_fmt,omitempty"`         // 采样格式
 	SampleRate    int32  `json:"sample_rate,omitempty,string"` // 采样率
@@ -33,7 +37,7 @@ type ProbeStream struct {
 }
 
 type ProbeFormat struct {
-	FormatName string  `json:"format_name,omitempty"`
-	Size       int64   `json:"size,omitempty,string"`
-	Duration   float32 `json:"duration,omitempty,string"`
+	FormatName string   `json:"format_name,omitempty"`
+	Size       int64    `json:"size,omitempty,string"`
+	Duration   Duration `json:"duration,omitempty"`
 }
